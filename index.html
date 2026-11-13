@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1018">
+  <meta name="description" content="LinkVault: descargas directas y revisión básica de enlaces.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <title>LinkVault</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0b1018;--panel:rgba(26,40,57,.72);--panel2:rgba(255,255,255,.055);--line:rgba(255,255,255,.12);--txt:#f2f6ff;--muted:#9eacc0;--blue:#83baff;--green:#65d9a8;--red:#ff8585;--amber:#ffd080}
+    [data-theme="light"]{color-scheme:light;--bg:#eef3f9;--panel:rgba(255,255,255,.76);--panel2:rgba(255,255,255,.65);--line:rgba(30,55,85,.13);--txt:#172337;--muted:#65738a;--blue:#286db7;--green:#16865c;--red:#c74444;--amber:#a66b00}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 15% 0%,#234366 0,transparent 38%),radial-gradient(ellipse at 95% 28%,#164d43 0,transparent 32%),var(--bg);color:var(--txt);font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom)}
+    .app{max-width:720px;margin:auto;padding:22px 0 30px}.top{display:flex;align-items:center;justify-content:space-between;margin:8px 2px 22px}.brand{font-size:28px;font-weight:800;letter-spacing:-.8px}.sub{color:var(--muted);font-size:12px}.shield{width:46px;height:46px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(135deg,#254e77,#245343);font-size:23px}
+    .glass{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:18px;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 16px 44px #0002;margin-bottom:16px}
+    h2{font-size:17px;margin:0 0 13px}input{width:100%;border:1px solid var(--line);background:var(--panel2);color:var(--txt);border-radius:15px;padding:16px;font-size:15px;outline:none}input:focus{border-color:var(--blue);box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 18%,transparent)}
+    .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:11px}button,.button{border:1px solid var(--line);border-radius:14px;padding:13px 12px;font-weight:700;font-size:14px;cursor:pointer;text-align:center;text-decoration:none;display:block}.primary{background:linear-gradient(135deg,#91c4ff,#5797e2);color:#102036;border:0}.secondary{background:var(--panel2);color:var(--txt)}.hint{font-size:11px;color:var(--muted);margin:12px 2px 0}
+    .tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}.tile{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px;min-height:112px}.ico{font-size:25px;margin-bottom:7px}.tile b{display:block}.tile small{color:var(--muted)}
+    .section-title{font-weight:750;margin:22px 3px 12px}.result{display:none;margin-top:13px;border-radius:15px;padding:13px;background:var(--panel2);border:1px solid var(--line)}.result.show{display:block}.status{font-weight:800;margin-bottom:5px}.safe{color:var(--green)}.warn{color:var(--amber)}.danger{color:var(--red)}
+    .nav{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;position:sticky;bottom:10px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:7px;backdrop-filter:blur(20px)}.nav button{border:0;background:transparent;color:var(--muted);font-size:11px;padding:9px 2px}.nav button.active{background:var(--panel2);color:var(--blue)}.view{display:none}.view.active{display:block}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:12px}.muted{color:var(--muted);font-size:13px}.toggle{display:flex;align-items:center;gap:10px}.toggle input{width:auto}
+    footer{text-align:center;color:var(--muted);font-size:11px;margin:15px 0 0}
+    @media(min-width:600px){.app{padding-top:34px}.glass{padding:22px}.tiles{gap:16px}}
+  </style>
+</head>
+<body>
+<main class="app">
+  <header class="top">
+    <div><div class="brand">LinkVault</div><div class="sub">Tu espacio digital, más seguro</div></div>
+    <div class="shield">⬡</div>
+  </header>
+
+  <section class="view active" id="home">
+    <div class="glass">
+      <h2>¿Qué quieres hacer?</h2>
+      <input id="url" type="url" inputmode="url" autocomplete="url" placeholder="Pega un enlace aquí…">
+      <div class="actions">
+        <button class="primary" id="scanBtn">⌕ Analizar enlace</button>
+        <button class="secondary" id="downloadBtn">↓ Descargar archivo</button>
+      </div>
+      <div class="hint">Esta versión acepta enlaces directos HTTP/HTTPS. No extrae contenido de redes sociales ni elude restricciones de plataformas.</div>
+      <div class="result" id="scanResult" aria-live="polite"></div>
+      <div class="result" id="downloadResult" aria-live="polite"></div>
+    </div>
+    <div class="section-title">Herramientas</div>
+    <div class="tiles">
+      <div class="tile"><div class="ico">⇩</div><b>Descargas</b><small>Archivos directos autorizados</small></div>
+      <div class="tile"><div class="ico">⛨</div><b>Seguridad</b><small>Revisión básica de enlaces</small></div>
+    </div>
+    <div class="glass" style="margin-top:16px">
+      <b>✦ Privacidad primero</b>
+      <p class="muted">Sin anuncios ni rastreadores publicitarios integrados. El análisis se realiza localmente en este prototipo.</p>
+    </div>
+  </section>
+
+  <section class="view" id="downloads">
+    <div class="glass"><h2>Descargas</h2><p class="muted">Cuando pulses Descargar archivo, el navegador gestionará la descarga si el servidor lo permite. Algunos sitios bloquean descargas externas.</p><p class="muted">Usa únicamente enlaces directos a archivos que tengas derecho a guardar.</p></div>
+  </section>
+  <section class="view" id="security">
+    <div class="glass"><h2>Analizador de enlaces</h2><p class="muted">Pega un enlace en Inicio y pulsa Analizar. Este prototipo revisa señales visibles en la URL, pero no consulta listas de amenazas en Internet.</p><div class="hint">Un resultado sin alertas no significa que el sitio sea seguro. No introduzcas contraseñas ni datos personales en sitios sospechosos.</div></div>
+  </section>
+  <section class="view" id="settings">
+    <div class="glass">
+      <h2>Apariencia</h2>
+      <label class="toggle"><span>Modo oscuro / claro</span><input type="checkbox" id="themeToggle" checked></label>
+      <p class="muted">LinkVault Web Preview · versión 0.1.0</p>
+      <p class="muted">Sin publicidad integrada.</p>
+    </div>
+  </section>
+
+  <nav class="nav" aria-label="Navegación">
+    <button class="active" data-view="home">⌂<br>Inicio</button>
+    <button data-view="downloads">⇩<br>Descargas</button>
+    <button data-view="security">⛨<br>Seguridad</button>
+    <button data-view="settings">⚙<br>Ajustes</button>
+  </nav>
+  <footer>Prototipo de pruebas · No es todavía una APK nativa</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x===b));
+  document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id===b.dataset.view));
+}));
+$('themeToggle').addEventListener('change',e=>{
+  document.documentElement.dataset.theme=e.target.checked?'dark':'light';
+  document.querySelector('meta[name="theme-color"]').content=e.target.checked?'#0b1018':'#eef3f9';
+});
+function parseUrl(raw){
+  try{const u=new URL(raw.trim());if(!['http:','https:'].includes(u.protocol)||!u.hostname)return null;return u}catch{return null}
+}
+$('scanBtn').addEventListener('click',()=>{
+  const raw=$('url').value.trim(),box=$('scanResult');box.className='result show';
+  const u=parseUrl(raw);
+  if(!raw){box.innerHTML='<div class="status warn">Falta el enlace</div>Escribe o pega una URL para analizar.';return}
+  if(!u){box.innerHTML='<div class="status danger">Formato no válido</div>La dirección no parece una URL HTTP/HTTPS válida. No la abras.';return}
+  const host=u.hostname.toLowerCase(),flags=[];
+  if(u.protocol==='http:')flags.push('La conexión no usa HTTPS.');
+  if(host.startsWith('xn--')||host.includes('.xn--'))flags.push('El dominio contiene caracteres internacionalizados.');
+  if(/^\\d{1,3}(\\.\\d{1,3}){3}$/.test(host))flags.push('El host parece ser una dirección IP.');
+  if((host.match(/-/g)||[]).length>=3)flags.push('El dominio contiene varios guiones.');
+  if(host.split('.')[0].length>28)flags.push('El subdominio inicial es inusualmente largo.');
+  if(['login','verify','account','secure','wallet','password'].some(x=>host.includes(x)))flags.push('Incluye términos frecuentes en páginas de acceso.');
+  const level=flags.length===0?'safe':(flags.length>=2||u.protocol==='http:'?'danger':'warn');
+  const label=level==='safe'?'Sin señales obvias':level==='warn'?'Precaución':'Riesgo elevado';
+  box.innerHTML='<div class="status '+level+'">'+label+'</div><div>'+ (flags.length?flags.join('<br>'):'No se detectaron señales comunes en el formato de la URL.')+'</div><p class="muted">Dominio: '+escapeHtml(host)+'</p><p class="hint">Análisis local heurístico; no verifica reputación ni garantiza seguridad.</p>';
+});
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+$('downloadBtn').addEventListener('click',()=>{
+ const u=parseUrl($('url').value),box=$('downloadResult');box.className='result show';
+ if(!u){box.textContent='Introduce una URL HTTP/HTTPS válida.';return}
+ if(u.username||u.password){box.textContent='Por seguridad, no se aceptan URLs que incluyan credenciales.';return}
+ const a=document.createElement('a');a.href=u.href;a.rel='noopener noreferrer';a.textContent='Abrir enlace para descargar';a.className='button primary';a.target='_blank';
+ box.replaceChildren(document.createTextNode('El navegador intentará abrir el enlace. Descarga solo archivos autorizados. '),a);
+});
+if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body>
+</html>
